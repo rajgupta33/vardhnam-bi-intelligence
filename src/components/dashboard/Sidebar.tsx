@@ -37,9 +37,9 @@ export function Sidebar() {
     <>
       {/* Mobile Top Bar */}
       <div className="lg:hidden flex items-center justify-between bg-slate-900 text-white p-4 h-16 shrink-0 sticky top-0 z-20">
-        <h1 className="text-lg font-bold tracking-tight">
-          VARDHNAM <span className="text-blue-400">ANALYTICS</span>
-        </h1>
+        <Link href="/dashboard" className="text-sm font-bold tracking-tight truncate mr-2 hover:opacity-80">
+          VARDHNAM <span className="text-blue-400">BI DASHBOARD</span>
+        </Link>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="text-white hover:bg-slate-800">
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
@@ -58,11 +58,15 @@ export function Sidebar() {
         "fixed inset-y-0 left-0 z-40 w-64 bg-slate-50 border-r flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 lg:shrink-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="hidden lg:flex h-16 items-center border-b px-6 shrink-0">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            VARDHNAM<br />
-            <span className="text-blue-600">ANALYTICS</span>
-          </h1>
+        <div className="hidden lg:flex py-4 items-center border-b px-6 shrink-0">
+          <Link href="/dashboard" className="block hover:opacity-80 transition-opacity">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">
+              VARDHNAM
+            </h1>
+            <span className="text-blue-600 text-[10px] font-bold uppercase tracking-wider block mt-1">
+              Business Intelligence Dashboard
+            </span>
+          </Link>
         </div>
         
         {/* Mobile close button inside sidebar (optional, but we have overlay) */}

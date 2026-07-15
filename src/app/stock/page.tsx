@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadProcessedData } from '@/lib/db';
 import { aggregateBySku, SkuMetrics, aggregateByCrop, CropMetrics } from '@/lib/analytics';
-import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
+import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Boxes, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
@@ -99,12 +99,12 @@ export default function StockAnalysis() {
           <CardHeader>
             <CardTitle>Closing Stock {mode} by Crop</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[...cropData].sort((a, b) => b[activeDataKey] - a[activeDataKey])} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+              <BarChart data={[...cropData].sort((a, b) => b[activeDataKey] - a[activeDataKey])} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                 <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={(val) => mode === 'Quantity' ? (val / 1000) + 'k' : '₹' + (val / 100000).toFixed(1) + 'L'} />
-                <YAxis dataKey="crop" type="category" axisLine={false} tickLine={false} />
+                <YAxis dataKey="crop" type="category" width={90} tickFormatter={(val) => truncateText(val, 12)} tick={{fontSize: 11}} axisLine={false} tickLine={false} />
                 <RechartsTooltip formatter={(value: any) => [formatValue(Number(value || 0)), `Closing ${mode}`]} />
                 <Bar dataKey={activeDataKey} name={`Closing ${mode}`} fill="#10b981" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -116,12 +116,12 @@ export default function StockAnalysis() {
           <CardHeader>
             <CardTitle>Top 10 SKUs by Closing Stock {mode}</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topSkus} layout="vertical" margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
+              <BarChart data={topSkus} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                 <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={(val) => mode === 'Quantity' ? (val / 1000) + 'k' : '₹' + (val / 100000).toFixed(1) + 'L'} />
-                <YAxis dataKey="uniqueSkuName" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={100} />
+                <YAxis dataKey="uniqueSkuName" type="category" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 15)} tick={{fontSize: 11}} width={110} />
                 <RechartsTooltip formatter={(value: any) => [formatValue(Number(value || 0)), `Closing ${mode}`]} />
                 <Bar dataKey={activeDataKey} name={`Closing ${mode}`} fill="#3b82f6" radius={[0, 4, 4, 0]} />
               </BarChart>

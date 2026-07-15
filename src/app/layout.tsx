@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vardhnam Analytics",
+  title: "Vardhnam Business Intelligence Dashboard",
   description: "FY 2025–26 Purchase-to-Demand Intelligence",
 };
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadProcessedData } from '@/lib/db';
 import { aggregateByCrop, CropMetrics, aggregateBySku, SkuMetrics, aggregateByDealer, DealerMetrics } from '@/lib/analytics';
-import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
+import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Undo2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -79,7 +79,7 @@ export default function SalesReturnAnalysis() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[...cropData].sort((a, b) => b.salesReturnQuantity - a.salesReturnQuantity)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="crop" axisLine={false} tickLine={false} />
+                <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => (val / 1000) + 'k'} />
                 <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
                 <Bar dataKey="salesReturnQuantity" name="Return Qty" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -96,7 +96,7 @@ export default function SalesReturnAnalysis() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[...cropData].sort((a, b) => b.returnRate - a.returnRate)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="crop" axisLine={false} tickLine={false} />
+                <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} />
                 <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toFixed(1)}%`, '']} />
                 <Bar dataKey="returnRate" name="Return Rate %" fill="#f59e0b" radius={[4, 4, 0, 0]} />
@@ -144,12 +144,12 @@ export default function SalesReturnAnalysis() {
         <CardHeader>
           <CardTitle>Top Parties by Physical Sales Return (Kg)</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topReturnedDealers} layout="vertical" margin={{ left: 50, right: 10 }}>
+            <BarChart data={topReturnedDealers} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" tickFormatter={(v) => `${v/1000}k`} />
-              <YAxis dataKey="partyName" type="category" width={100} tick={{fontSize: 10}} />
+              <YAxis dataKey="partyName" type="category" width={110} tickFormatter={(val) => truncateText(val, 15)} tick={{fontSize: 11}} />
               <RechartsTooltip 
                 formatter={(v: any, name: any, props: any) => {
                   if (name === 'salesReturnQuantity') return [formatQuantity(v), 'Return Qty'];

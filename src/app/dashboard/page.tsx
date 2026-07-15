@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadProcessedData } from '@/lib/db';
 import { calculateGlobalMetrics, GlobalMetrics, aggregateByCrop, CropMetrics } from '@/lib/analytics';
-import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
+import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Activity, IndianRupee, Package, Scale, TrendingDown, RefreshCcw, Undo2, Boxes } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
@@ -62,7 +62,7 @@ export default function CommandCentre() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sortedByDemand} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="crop" axisLine={false} tickLine={false} />
+                <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => (val / 1000) + 'k'} />
                 <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
                 <Legend iconType="circle" />
@@ -81,7 +81,7 @@ export default function CommandCentre() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sortedByDemand} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="crop" axisLine={false} tickLine={false} />
+                <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => (val / 1000) + 'k'} />
                 <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
                 <Legend iconType="circle" />

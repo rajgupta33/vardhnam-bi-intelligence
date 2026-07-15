@@ -31,3 +31,8 @@ export function formatCurrencyINR(val: number): string {
 export function formatPercentage(val: number): string {
   return val.toLocaleString('en-IN', { maximumFractionDigits: 1 }) + '%';
 }
+
+export function truncateText(str: string, maxLength: number): string {
+  if (!str) return '';
+  return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+}

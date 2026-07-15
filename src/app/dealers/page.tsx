@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { loadProcessedData } from '@/lib/db';
 import { DealerMetrics, aggregateByDealer, calculateDealerConcentration } from '@/lib/analytics/dealer';
-import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
+import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Users, TrendingDown, ArrowRight, X, TrendingUp } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -127,12 +127,12 @@ export default function DealersIntelligence() {
           <CardHeader>
             <CardTitle className="text-sm">Top 10 Parties by Net Demand (Kg)</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top10Demand} layout="vertical" margin={{ left: 50, right: 10 }}>
+              <BarChart data={top10Demand} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" tickFormatter={(v) => `${v/1000}k`} />
-                <YAxis dataKey="partyName" type="category" width={100} tick={{fontSize: 10}} />
+                <YAxis dataKey="partyName" type="category" width={110} tickFormatter={(val) => truncateText(val, 15)} tick={{fontSize: 11}} />
                 <RechartsTooltip formatter={(v: any) => formatQuantity(Number(v || 0))} />
                 <Bar dataKey="netDemand" fill="#0284c7" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -144,12 +144,12 @@ export default function DealersIntelligence() {
           <CardHeader>
             <CardTitle className="text-sm">Top 10 Parties by Gross Sales Value (₹)</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top10Value} layout="vertical" margin={{ left: 50, right: 10 }}>
+              <BarChart data={top10Value} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" tickFormatter={(v) => `${(v/1000000).toFixed(1)}M`} />
-                <YAxis dataKey="partyName" type="category" width={100} tick={{fontSize: 10}} />
+                <YAxis dataKey="partyName" type="category" width={110} tickFormatter={(val) => truncateText(val, 15)} tick={{fontSize: 11}} />
                 <RechartsTooltip formatter={(v: any) => formatCurrencyINR(Number(v || 0))} />
                 <Bar dataKey="grossSalesValue" fill="#0d9488" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -161,12 +161,12 @@ export default function DealersIntelligence() {
           <CardHeader>
             <CardTitle className="text-sm">Top 10 Parties by Physical Return (Kg)</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top10Return} layout="vertical" margin={{ left: 50, right: 10 }}>
+              <BarChart data={top10Return} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" tickFormatter={(v) => `${v/1000}k`} />
-                <YAxis dataKey="partyName" type="category" width={100} tick={{fontSize: 10}} />
+                <YAxis dataKey="partyName" type="category" width={110} tickFormatter={(val) => truncateText(val, 15)} tick={{fontSize: 11}} />
                 <RechartsTooltip formatter={(v: any) => formatQuantity(Number(v || 0))} />
                 <Bar dataKey="salesReturnQuantity" fill="#e11d48" radius={[0, 4, 4, 0]} />
               </BarChart>
