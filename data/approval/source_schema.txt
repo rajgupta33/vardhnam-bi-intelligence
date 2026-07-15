@@ -1,0 +1,98 @@
+=== FILE: DayBook_1_converted.xlsx ===
+Sheets: ['Verification', 'Voucher_Header', 'Item_Lines', 'Raw_Extracted_Lines']
+  Sheet: Verification
+  Columns: ['Sales Register Conversion Verification', 'Unnamed: 1']
+  Row 0: {'Sales Register Conversion Verification': nan, 'Unnamed: 1': nan}
+  Row 1: {'Sales Register Conversion Verification': 'Source file', 'Unnamed: 1': 'DayBook (1).pdf'}
+  Sheet: Voucher_Header
+  Columns: ['voucher_id', 'page', 'date', 'date_original', 'party', 'vch_type', 'vch_no', 'voucher_amount', 'references', 'narration']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-04-02 00:00:00'), 'date_original': '2-Apr-25', 'party': 'Guddan Singh C/o Narendra G', 'vch_type': 'Sales', 'vch_no': 'VAS 25-26/01', 'voucher_amount': 5400, 'references': nan, 'narration': 'Being stock supply via challan no.622'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-04-02 00:00:00'), 'date_original': '2-Apr-25', 'party': '13300 Bajrang Traders', 'vch_type': 'Sales', 'vch_no': 'VAS 25-26/02', 'voucher_amount': 128000, 'references': 'New Ref 4 1,28,000.00 Dr', 'narration': nan}
+  Sheet: Item_Lines
+  Columns: ['voucher_id', 'page', 'date', 'party', 'vch_type', 'vch_no', 'ledger', 'item_name', 'quantity', 'unit', 'rate', 'rate_unit', 'item_amount', 'raw_item_line']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-04-02 00:00:00'), 'party': 'Guddan Singh C/o Narendra G', 'vch_type': 'Sales', 'vch_no': 'VAS 25-26/01', 'ledger': 'Sales', 'item_name': 'Maize( Basant Gold 9180) 4 Kg*10 Pc', 'quantity': 12, 'unit': 'KGS', 'rate': 450, 'rate_unit': 'KGS', 'item_amount': 5400, 'raw_item_line': 'Maize( Basant Gold 9180) 4 Kg*10 Pc 12.000 KGS 450.00/KGS 5,400.00'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-04-02 00:00:00'), 'party': '13300 Bajrang Traders', 'vch_type': 'Sales', 'vch_no': 'VAS 25-26/02', 'ledger': 'Sales', 'item_name': 'Maize( Basant Gold 9180) 4 Kg*10 Pc', 'quantity': 320, 'unit': 'KGS', 'rate': 400, 'rate_unit': 'KGS', 'item_amount': 128000, 'raw_item_line': 'Maize( Basant Gold 9180) 4 Kg*10 Pc 320.000 KGS 400.00/KGS 1,28,000.00'}
+  Sheet: Raw_Extracted_Lines
+  Columns: ['page', 'line', 'raw_text']
+  Row 0: {'page': 1, 'line': 1, 'raw_text': '                                                        VARDHNAM AGRO SOLUTIONS PVT.LTD (U.P) (25-26)'}
+  Row 1: {'page': 1, 'line': 2, 'raw_text': '                                                            H.0 :- PLOT NO.067 PARAT & SLR INDRAPRASTHA,'}
+
+=== FILE: Purcase_UP_1_converted.xlsx ===
+Sheets: ['Verification', 'Voucher_Header', 'Item_Lines', 'Raw_Extracted_Lines']
+  Sheet: Verification
+  Columns: ['Purchase Register Conversion Verification', 'Unnamed: 1']
+  Row 0: {'Purchase Register Conversion Verification': nan, 'Unnamed: 1': nan}
+  Row 1: {'Purchase Register Conversion Verification': 'Source file', 'Unnamed: 1': 'Purcase UP(1).pdf'}
+  Sheet: Voucher_Header
+  Columns: ['voucher_id', 'page', 'date', 'date_original', 'party', 'vch_type', 'vch_no', 'voucher_amount', 'references', 'narration']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-05-10 00:00:00'), 'date_original': '10-May-25', 'party': 'Pankaj Packers', 'vch_type': 'Purchase', 'vch_no': 1, 'voucher_amount': 37872, 'references': 'New Ref 025 37,872.00 Cr', 'narration': 'Being invoice no.025'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-05-12 00:00:00'), 'date_original': '12-May-25', 'party': 'Vardhnam Agro Solutions Pvt.Ltd.(H.O)(H)', 'vch_type': 'Purchase', 'vch_no': 2, 'voucher_amount': 2929760, 'references': nan, 'narration': 'Being transfer from HO.'}
+  Sheet: Item_Lines
+  Columns: ['voucher_id', 'page', 'date', 'party', 'vch_type', 'vch_no', 'ledger', 'item_name', 'quantity', 'unit', 'rate', 'rate_unit', 'item_amount', 'raw_item_line']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-05-10 00:00:00'), 'party': 'Pankaj Packers', 'vch_type': 'Purchase', 'vch_no': 1, 'ledger': 'Purchase', 'item_name': 'Packing Bag', 'quantity': 267.46, 'unit': 'KGS', 'rate': 141.6, 'rate_unit': 'KGS', 'item_amount': 37872, 'raw_item_line': 'Packing Bag 267.460 KGS 141.60/KGS 37,872.00'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-05-12 00:00:00'), 'party': 'Vardhnam Agro Solutions Pvt.Ltd.(H.O)(H)', 'vch_type': 'Purchase', 'vch_no': 2, 'ledger': 'Purchase Exempt', 'item_name': 'Paddy (Aman)', 'quantity': 15055.0, 'unit': 'KGS', 'rate': 32.0, 'rate_unit': 'KGS', 'item_amount': 481760, 'raw_item_line': 'Paddy (Aman) 15,055.000 KGS 32.00/KGS 4,81,760.00'}
+  Sheet: Raw_Extracted_Lines
+  Columns: ['page', 'line', 'raw_text']
+  Row 0: {'page': 1, 'line': 1, 'raw_text': '                                                       VARDHNAM AGRO SOLUTIONS PVT.LTD (U.P) (25-26)'}
+  Row 1: {'page': 1, 'line': 2, 'raw_text': '                                                             H.0 :- PLOT NO.067 PARAT & SLR INDRAPRASTHA,'}
+
+=== FILE: purchase_2_converted.xlsx ===
+Sheets: ['Verification', 'Voucher_Header', 'Item_Lines', 'Raw_Extracted_Lines']
+  Sheet: Verification
+  Columns: ['Purchase Register Conversion Verification', 'Unnamed: 1']
+  Row 0: {'Purchase Register Conversion Verification': nan, 'Unnamed: 1': nan}
+  Row 1: {'Purchase Register Conversion Verification': 'Source file', 'Unnamed: 1': 'purchase(2).pdf'}
+  Sheet: Voucher_Header
+  Columns: ['voucher_id', 'page', 'date', 'date_original', 'party', 'vch_type', 'vch_no', 'voucher_amount', 'references', 'narration']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-04-22 00:00:00'), 'date_original': '22-Apr-25', 'party': 'Potarevena Ravinder', 'vch_type': 'Purchase', 'vch_no': 1, 'voucher_amount': 670400, 'references': nan, 'narration': 'Being purchase'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-04-28 00:00:00'), 'date_original': '28-Apr-25', 'party': 'Potarevena Ravinder', 'vch_type': 'Purchase', 'vch_no': 2, 'voucher_amount': 713155, 'references': nan, 'narration': 'Being purchase.'}
+  Sheet: Item_Lines
+  Columns: ['voucher_id', 'page', 'date', 'party', 'vch_type', 'vch_no', 'ledger', 'item_name', 'quantity', 'unit', 'rate', 'rate_unit', 'item_amount', 'raw_item_line']
+  Row 0: {'voucher_id': 1, 'page': 1, 'date': Timestamp('2025-04-22 00:00:00'), 'party': 'Potarevena Ravinder', 'vch_type': 'Purchase', 'vch_no': 1, 'ledger': 'Purchase (URP)', 'item_name': 'Paddy Sampurna', 'quantity': 20950, 'unit': 'KGS', 'rate': 32, 'rate_unit': 'KGS', 'item_amount': 670400, 'raw_item_line': 'Paddy Sampurna 20,950.000 KGS 32.00/KGS 6,70,400.00'}
+  Row 1: {'voucher_id': 2, 'page': 1, 'date': Timestamp('2025-04-28 00:00:00'), 'party': 'Potarevena Ravinder', 'vch_type': 'Purchase', 'vch_no': 2, 'ledger': 'Purchase (URP)', 'item_name': 'Paddy Pb 1692', 'quantity': 16585, 'unit': 'KGS', 'rate': 43, 'rate_unit': 'KGS', 'item_amount': 713155, 'raw_item_line': 'Paddy Pb 1692 16,585.000 KGS 43.00/KGS 7,13,155.00'}
+  Sheet: Raw_Extracted_Lines
+  Columns: ['page', 'line', 'raw_text']
+  Row 0: {'page': 1, 'line': 1, 'raw_text': '                                   VARDHNAM AGRO SOLUTIONS PVT.LTD (Telangana)(25-26)'}
+  Row 1: {'page': 1, 'line': 2, 'raw_text': '                                          PT.NO 067 , PARAT & SLR , INDRAPRASTHA, PHATHWELLY'}
+
+=== FILE: Credit_Note.xlsx ===
+Sheets: ['Credit_Note']
+  Sheet: Credit_Note
+  Columns: ['voucher_id', 'page', 'date', 'party', 'vch_no', 'ledger', 'item_name', 'quantity', 'unit', 'rate', 'rate_unit', 'item_amount', 'raw_item_line', 'SKU_ID', 'Unique_SKU_Name', 'Mapping_Confidence', 'Review_Flag']
+  Row 0: {'voucher_id': 7, 'page': 2, 'date': 45782, 'party': 'K P Singh', 'vch_no': 'VAS 25-26/CN 07', 'ledger': 'Sales', 'item_name': 'Maize (Chanakya 4590) 4 Kg*10 Pc', 'quantity': nan, 'unit': nan, 'rate': nan, 'rate_unit': nan, 'item_amount': 17160, 'raw_item_line': 'Maize (Chanakya 4590) 4 Kg*10 Pc 17,160.00', 'SKU_ID': 'MAI003', 'Unique_SKU_Name': 'Maize Chanakya 4590 — 4 Kg × 10 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes'}
+  Row 1: {'voucher_id': 4, 'page': 1, 'date': 45771, 'party': 'Puthiyabarai Vision Farmer Produer Company', 'vch_no': 'VAS 25-26/CN04', 'ledger': 'Sales', 'item_name': 'Paddy PB 1692 (6 Kg* 5 Pc)', 'quantity': nan, 'unit': nan, 'rate': nan, 'rate_unit': nan, 'item_amount': 750, 'raw_item_line': 'Paddy PB 1692 (6 Kg* 5 Pc) 750.00', 'SKU_ID': 'PAD016', 'Unique_SKU_Name': 'Paddy PB 1692 — 6 Kg × 5 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes'}
+
+=== FILE: Godown_Stock_Excel.xlsx ===
+Sheets: ['Godown_Stock']
+  Sheet: Godown_Stock
+  Columns: ['VARDHNAM AGRO SOLUTIONS PVT.LTD (U.P) (25-26)', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 'Column10', 'Column11', 'Column12', 'Column13']
+  Row 0: {'VARDHNAM AGRO SOLUTIONS PVT.LTD (U.P) (25-26)': 'H.0 :- PLOT NO.067 PARAT & SLR INDRAPRASTHA,', 'Column2': nan, 'Column3': nan, 'Column4': nan, 'Column5': nan, 'Column6': nan, 'Column7': nan, 'Column8': nan, 'Column9': nan, 'Column10': nan, 'Column11': nan, 'Column12': nan, 'Column13': nan}
+  Row 1: {'VARDHNAM AGRO SOLUTIONS PVT.LTD (U.P) (25-26)': 'ATHVELLEY MEDCHAL,HYDERABAD,TELANGANA-501404', 'Column2': nan, 'Column3': nan, 'Column4': nan, 'Column5': nan, 'Column6': nan, 'Column7': nan, 'Column8': nan, 'Column9': nan, 'Column10': nan, 'Column11': nan, 'Column12': nan, 'Column13': nan}
+
+=== FILE: SKU_Master_Proper.xlsx ===
+Sheets: ['SKU_Master']
+  Sheet: SKU_Master
+  Columns: ['SKU_ID', 'Unique_SKU_Name', 'Crop', 'Variety', 'Pack_Size', 'Category', 'SKU_Status', 'Mapping_Confidence', 'Review_Flag', 'Review_Reason']
+  Row 0: {'SKU_ID': 'CHE001', 'Unique_SKU_Name': 'Carbendazim 12 %+Mancozeb 63%', 'Crop': 'Not Applicable', 'Variety': 'Not Applicable', 'Pack_Size': 'Not Available', 'Category': 'Chemical', 'SKU_Status': 'Active FY25-26', 'Mapping_Confidence': 'High', 'Review_Flag': 'No', 'Review_Reason': nan}
+  Row 1: {'SKU_ID': 'CHE002', 'Unique_SKU_Name': 'DELTAMETHRIN 2.5% WP', 'Crop': 'Not Applicable', 'Variety': 'Not Applicable', 'Pack_Size': 'Not Available', 'Category': 'Chemical', 'SKU_Status': 'Active FY25-26', 'Mapping_Confidence': 'High', 'Review_Flag': 'No', 'Review_Reason': nan}
+
+=== FILE: Voucher_Header.csv ===
+Columns: ['voucher_id', 'page', 'date', 'date_original', 'party', 'vch_type', 'vch_no', 'primary_ledger', 'credit_amount', 'agst_refs', 'narration']
+Row 0: {'voucher_id': 18, 'page': 3, 'date': 45801, 'date_original': '2025-05-24 00:00:00.000', 'party': '13100 Paras Beej Bhandar', 'vch_type': 'Credit Note', 'vch_no': 'VAS 25-26/CN 18', 'primary_ledger': 'Sales', 'credit_amount': 1000, 'agst_refs': nan, 'narration': 'Being freight of paddy supply is credited.'}
+Row 1: {'voucher_id': 19, 'page': 3, 'date': 45801, 'date_original': '2025-05-24 00:00:00.000', 'party': '13200 Shri Radhey Radhey Krishi Sewa Kendra', 'vch_type': 'Credit Note', 'vch_no': 'VAS 25-26/CN 19', 'primary_ledger': 'Sales', 'credit_amount': 500, 'agst_refs': nan, 'narration': 'Being freight of paddy supply is credited.'}
+
+=== FILE: SKU_Master.csv ===
+Columns: ['SKU_ID', 'Unique_SKU_Name', 'Crop', 'Variety', 'Pack_Size', 'Category', 'SKU_Status', 'Mapping_Confidence', 'Review_Flag', 'Review_Reason']
+Row 0: {'SKU_ID': 'CHE001', 'Unique_SKU_Name': 'Carbendazim 12 %+Mancozeb 63%', 'Crop': 'Not Applicable', 'Variety': 'Not Applicable', 'Pack_Size': 'Not Available', 'Category': 'Chemical', 'SKU_Status': 'Active FY25-26', 'Mapping_Confidence': 'High', 'Review_Flag': 'No', 'Review_Reason': nan}
+Row 1: {'SKU_ID': 'CHE002', 'Unique_SKU_Name': 'DELTAMETHRIN 2.5% WP', 'Crop': 'Not Applicable', 'Variety': 'Not Applicable', 'Pack_Size': 'Not Available', 'Category': 'Chemical', 'SKU_Status': 'Active FY25-26', 'Mapping_Confidence': 'High', 'Review_Flag': 'No', 'Review_Reason': nan}
+
+=== FILE: SKU_Mapping.csv ===
+Columns: ['Original_Item_Name', 'Normalised_Item_Name', 'Source_Type', 'Source_File', 'SKU_ID', 'Unique_SKU_Name', 'Mapping_Confidence', 'Review_Flag', 'Mapping_Reason']
+Row 0: {'Original_Item_Name': 'Bajra Vardhnam -1107 (1.5 Kg*30 Pc)', 'Normalised_Item_Name': 'BAJRA VARDHNAM 1107 1 5 KG X 30 PC', 'Source_Type': 'Credit Note', 'Source_File': 'CN_25-26_converted.xlsx', 'SKU_ID': 'BAJ002', 'Unique_SKU_Name': 'Bajra Vardhnam 1107 — 1.5 Kg × 30 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes', 'Mapping_Reason': 'Exact or conservative SKU identity based on crop/category, variety/product name and explicit pack size.'}
+Row 1: {'Original_Item_Name': 'Bajra Vardhnam -9090(1.5 Kg*30 Pc)', 'Normalised_Item_Name': 'BAJRA VARDHNAM 9090 1 5 KG X 30 PC', 'Source_Type': 'Credit Note', 'Source_File': 'CN_25-26_converted.xlsx', 'SKU_ID': 'BAJ003', 'Unique_SKU_Name': 'Bajra Vardhnam 9090 — 1.5 Kg × 30 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes', 'Mapping_Reason': 'Exact or conservative SKU identity based on crop/category, variety/product name and explicit pack size.'}
+
+=== FILE: Sales_Return_Items.csv ===
+Columns: ['voucher_id', 'page', 'date', 'party', 'vch_no', 'ledger', 'item_name', 'quantity', 'unit', 'rate', 'rate_unit', 'item_amount', 'raw_item_line', 'SKU_ID', 'Unique_SKU_Name', 'Mapping_Confidence', 'Review_Flag']
+Row 0: {'voucher_id': 7, 'page': 2, 'date': 45782, 'party': 'K P Singh', 'vch_no': 'VAS 25-26/CN 07', 'ledger': 'Sales', 'item_name': 'Maize (Chanakya 4590) 4 Kg*10 Pc', 'quantity': nan, 'unit': nan, 'rate': nan, 'rate_unit': nan, 'item_amount': 17160, 'raw_item_line': 'Maize (Chanakya 4590) 4 Kg*10 Pc 17,160.00', 'SKU_ID': 'MAI003', 'Unique_SKU_Name': 'Maize Chanakya 4590 — 4 Kg × 10 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes'}
+Row 1: {'voucher_id': 4, 'page': 1, 'date': 45771, 'party': 'Puthiyabarai Vision Farmer Produer Company', 'vch_no': 'VAS 25-26/CN04', 'ledger': 'Sales', 'item_name': 'Paddy PB 1692 (6 Kg* 5 Pc)', 'quantity': nan, 'unit': nan, 'rate': nan, 'rate_unit': nan, 'item_amount': 750, 'raw_item_line': 'Paddy PB 1692 (6 Kg* 5 Pc) 750.00', 'SKU_ID': 'PAD016', 'Unique_SKU_Name': 'Paddy PB 1692 — 6 Kg × 5 Pc', 'Mapping_Confidence': 'High', 'Review_Flag': 'Yes'}
+
