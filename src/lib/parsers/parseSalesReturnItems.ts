@@ -68,6 +68,9 @@ export async function parseSalesReturnItems(
       originalItemName: String(originalItemName).trim(),
       normalisedItemName: '',
       skuId: row.SKU_ID || null, // Might be present in source, but we will re-map anyway
+      returnKind: returnQuantityKg > 0 ? ('PHYSICAL' as const) : ('VALUE_ONLY' as const),
+      returnQuantity: returnQuantityKg,
+      unit: row.unit || null,
       returnQuantityKg,
       originalQuantity: returnQuantityKg,
       originalUnit: row.unit || null,

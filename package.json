@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "cross-env NODE_OPTIONS=--experimental-sqlite next dev",
+    "build": "cross-env NODE_OPTIONS=--experimental-sqlite next build",
+    "start": "cross-env NODE_OPTIONS=--experimental-sqlite next start",
+    "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@types/papaparse": "^5.5.2",
     "clsx": "^2.1.1",
-    "idb": "^8.0.3",
+    "fast-xml-parser": "^5.10.1",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "papaparse": "^5.5.4",
@@ -24,9 +25,10 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",

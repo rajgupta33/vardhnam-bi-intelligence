@@ -3,23 +3,41 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadProcessedData } from '@/lib/db';
-import { calculateGlobalMetrics, GlobalMetrics, aggregateByCrop, CropMetrics } from '@/lib/analytics';
+import { calculateGlobalMetrics, GlobalMetrics, aggregateByCrop, CropMetrics, listCategories, listCompanies, listFinancialYears } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
-import { Activity, IndianRupee, Package, Scale, TrendingDown, RefreshCcw, Undo2, Boxes } from 'lucide-react';
+import { Activity, IndianRupee, Package, Scale, TrendingDown, RefreshCcw, Undo2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
+import type { ProcessedDataset } from '@/lib/db';
 
 export default function CommandCentre() {
-  const [metrics, setMetrics] = useState<GlobalMetrics | null>(null);
-  const [cropData, setCropData] = useState<CropMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProcessedData().then(data => {
-      if (data.sales && data.skuMaster) {
-        setMetrics(calculateGlobalMetrics(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-        setCropData(aggregateByCrop(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-      }
+    const load = () => loadProcessedData().then(d => {
+      if (d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+
+  const metrics: GlobalMetrics | null = useMemo(() => {
+    if (!data) return null;
+    return calculateGlobalMetrics(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, { company, financialYear, category });
+  }, [data, company, financialYear, category]);
+
+  const cropData: CropMetrics[] = useMemo(() => {
+    if (!data) return [];
+    return aggregateByCrop(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, { company, financialYear, category });
+  }, [data, company, financialYear, category]);
 
   if (!metrics) {
     return <div className="p-8 text-slate-500 flex h-full items-center justify-center">Loading Command Centre...</div>;
@@ -27,29 +45,62 @@ export default function CommandCentre() {
 
   const sortedByDemand = [...cropData].sort((a, b) => b.netDemand - a.netDemand).slice(0, 10);
 
+  const scopeNote = category ? `${category} only` : 'All categories';
+  const yearLabel = financialYear || (financialYears.length > 1 ? 'all years' : financialYears[0] || '');
+
+  /**
+   * Whether a figure can honestly claim to tie to Tally is now per-year, not
+   * global: Tally supplies FY2024-25 while FY2025-26 comes from the converted
+   * registers and has no Tally control total to check against. Rather than
+   * guess which years are verified, the net figures point at Reconciliation,
+   * which shows the per-company-per-year variance directly.
+   */
+  const netNote = category ? `${scopeNote} — see Reconciliation` : 'Net of returns & adjustments';
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">CEO COMMAND CENTRE</h1>
-        <p className="text-slate-500 mt-1">FY 2025–26 Purchase, Demand, Return & Stock Overview</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">CEO COMMAND CENTRE</h1>
+          <p className="text-slate-500 mt-1">
+            {yearLabel} Purchase, Demand, Return &amp; Stock Overview
+            {company ? ` · ${company}` : companies.length > 1 ? ' · all companies' : ''}
+          </p>
+        </div>
+        <ScopeFilter
+          companies={companies}
+          financialYears={financialYears}
+          categories={categories}
+          company={company}
+          financialYear={financialYear}
+          category={category}
+          onCompanyChange={setCompany}
+          onFinancialYearChange={setFinancialYear}
+          onCategoryChange={setCategory}
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Purchase Quantity" value={formatQuantity(metrics.purchaseQuantity)} exactValue={`${metrics.purchaseQuantity.toLocaleString()} Kg`} icon={Package} description="Mapped Seed Purchase" />
-        <KpiCard title="Purchase Value" value={formatCurrencyINR(metrics.purchaseValue)} exactValue={`₹${metrics.purchaseValue.toLocaleString()}`} icon={IndianRupee} description="Total Purchase Value" />
-        <KpiCard title="Gross Sales Qty" value={formatQuantity(metrics.grossSalesQuantity)} exactValue={`${metrics.grossSalesQuantity.toLocaleString()} Kg`} icon={Activity} description="Gross Seed Sales" />
-        <KpiCard title="Net Demand" value={formatQuantity(metrics.netDemand)} exactValue={`${metrics.netDemand.toLocaleString()} Kg`} icon={Scale} description="Sales minus Returns" />
-        <KpiCard title="Physical Sales Return" value={formatQuantity(metrics.salesReturnQuantity)} exactValue={`${metrics.salesReturnQuantity.toLocaleString()} Kg`} icon={Undo2} description="Actual Return Qty" />
-        <KpiCard title="Return Rate" value={metrics.grossSalesQuantity ? (metrics.salesReturnQuantity / metrics.grossSalesQuantity * 100).toFixed(1) + '%' : '0%'} exactValue="Return Qty / Gross Sales Qty" icon={TrendingDown} description="Overall Return Rate" />
-        <KpiCard title="Closing Stock Qty" value={formatQuantity(metrics.closingStockQuantity)} exactValue={`${metrics.closingStockQuantity.toLocaleString()} Kg`} icon={Boxes} description="Actual Godown Stock" />
+        <KpiCard title="Purchase Quantity" value={formatQuantity(metrics.purchaseQuantity)} exactValue={`${metrics.purchaseQuantity.toLocaleString()} Kg`} icon={Package} description="Kilogram lines only" />
+        <KpiCard title="Purchase Value" value={formatCurrencyINR(metrics.purchaseValue)} exactValue={`₹${metrics.purchaseValue.toLocaleString()}`} icon={IndianRupee} description="Gross, before debit notes" />
+        <KpiCard title="Net Purchase Value" value={formatCurrencyINR(metrics.netPurchaseValue)} exactValue={`₹${metrics.netPurchaseValue.toLocaleString()}`} icon={Scale} description={netNote} />
+        <KpiCard title="Physical Purchase Return" value={formatQuantity(metrics.purchaseReturnQuantity)} exactValue={`${metrics.purchaseReturnQuantity.toLocaleString()} Kg`} icon={Undo2} description="Goods sent back to supplier" />
+        <KpiCard title="Value-Only Debit Notes" value={formatCurrencyINR(metrics.valueOnlyDebitNoteValue)} exactValue={`₹${metrics.valueOnlyDebitNoteValue.toLocaleString()}`} icon={IndianRupee} description="Rate difference / discount" />
+        <KpiCard title="Gross Sales Qty" value={formatQuantity(metrics.grossSalesQuantity)} exactValue={`${metrics.grossSalesQuantity.toLocaleString()} Kg`} icon={Activity} description="Kilogram lines only" />
+        <KpiCard title="Total Sales Value" value={formatCurrencyINR(metrics.grossSalesValue)} exactValue={`₹${metrics.grossSalesValue.toLocaleString()}`} icon={IndianRupee} description="Gross, before credit notes" />
+        <KpiCard title="Net Sales Value" value={formatCurrencyINR(metrics.netSalesValue)} exactValue={`₹${metrics.netSalesValue.toLocaleString()}`} icon={Scale} description={netNote} />
+        <KpiCard title="Physical Sales Return" value={formatQuantity(metrics.salesReturnQuantity)} exactValue={`${metrics.salesReturnQuantity.toLocaleString()} Kg`} icon={Undo2} description="Goods actually returned" />
+        <KpiCard title="Value-Only Credit Notes" value={formatCurrencyINR(metrics.valueOnlyCreditNoteValue)} exactValue={`₹${metrics.valueOnlyCreditNoteValue.toLocaleString()}`} icon={IndianRupee} description="Rate difference / discount" />
+        <KpiCard title="Return Rate" value={metrics.grossSalesQuantity ? (metrics.salesReturnQuantity / metrics.grossSalesQuantity * 100).toFixed(1) + '%' : '0%'} exactValue="Physical return qty / gross sales qty" icon={TrendingDown} description="Physical returns only" />
         <KpiCard title="Closing Stock Value" value={formatCurrencyINR(metrics.closingStockValue)} exactValue={`₹${metrics.closingStockValue.toLocaleString()}`} icon={IndianRupee} description="Godown Stock Value" />
       </div>
-      
+
       <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-4">
         <RefreshCcw className="h-5 w-5 text-blue-600 shrink-0" />
         <p className="text-sm text-blue-900 font-medium leading-relaxed">
-          Executive Insight: Total Purchase-to-Demand gap is {formatQuantity(metrics.purchaseQuantity - metrics.netDemand)}. 
-          Opening stock is not included in this reconciliation.
+          Executive Insight: Total Purchase-to-Demand gap is {formatQuantity(metrics.purchaseQuantity - metrics.netDemand)}.
+          Opening stock is not included. Quantity figures count kilogram-denominated lines only —
+          see Reconciliation for the full per-unit breakdown and any unmapped value.
         </p>
       </div>
 

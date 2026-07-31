@@ -1,26 +1,45 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { loadProcessedData } from '@/lib/db';
-import { aggregateByCrop, CropMetrics, calculateForecastScenario } from '@/lib/analytics';
+import { loadProcessedData, type ProcessedDataset } from '@/lib/db';
+import { aggregateByCrop, CropMetrics, calculateForecastScenario, listCompanies, listFinancialYears, listCategories } from '@/lib/analytics';
 import { formatQuantity } from '@/lib/utils';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 
 export default function ForecastPlanner() {
-  const [cropData, setCropData] = useState<CropMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
   const [selectedCrop, setSelectedCrop] = useState<string>('All');
-  
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
+
   const [growthRate, setGrowthRate] = useState<number>(0);
   const [usableStock, setUsableStock] = useState<number>(100);
 
   useEffect(() => {
-    loadProcessedData().then(data => {
-      if (data.sales && data.skuMaster) {
-        setCropData(aggregateByCrop(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-      }
+    const load = () => loadProcessedData().then(d => {
+      if (d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+
+  const cropData: CropMetrics[] = useMemo(
+    () => (data ? aggregateByCrop(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, { company, financialYear, category }) : []),
+    [data, company, financialYear, category]
+  );
+
+  // The base-period label describes what "Base Net Demand" and "Total Closing
+  // Stock" below actually mean — this must track the active year filter, not
+  // stay hardcoded to FY24-25 now that more than one year exists.
+  const basePeriodLabel = financialYear || (financialYears.length > 1 ? 'all years combined' : financialYears[0] || 'Actual');
 
   const activeData = selectedCrop === 'All' 
     ? { netDemand: cropData.reduce((acc, c) => acc + c.netDemand, 0), closingStock: cropData.reduce((acc, c) => acc + c.closingStockQuantity, 0) }
@@ -30,9 +49,22 @@ export default function ForecastPlanner() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">NEXT-SEASON PURCHASE PLANNER</h1>
-        <p className="text-slate-500 mt-1">Scenario-based planning using FY 2025–26 Net Demand and Closing Stock</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">NEXT-SEASON PURCHASE PLANNER</h1>
+          <p className="text-slate-500 mt-1">Scenario-based planning using {basePeriodLabel} Net Demand and Closing Stock</p>
+        </div>
+        <ScopeFilter
+          companies={companies}
+          financialYears={financialYears}
+          categories={categories}
+          company={company}
+          financialYear={financialYear}
+          category={category}
+          onCompanyChange={setCompany}
+          onFinancialYearChange={setFinancialYear}
+          onCategoryChange={setCategory}
+        />
       </div>
       
       <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg flex items-start gap-3">
@@ -115,7 +147,7 @@ export default function ForecastPlanner() {
               <CardContent className="p-6">
                 <div className="text-sm font-medium text-slate-500 mb-1">Base Net Demand</div>
                 <div className="text-2xl font-bold text-slate-900">{formatQuantity(activeData.netDemand)}</div>
-                <div className="text-xs text-slate-400 mt-1">FY 25-26 Actual</div>
+                <div className="text-xs text-slate-400 mt-1">{basePeriodLabel} Actual</div>
               </CardContent>
             </Card>
             <Card>
@@ -129,7 +161,7 @@ export default function ForecastPlanner() {
               <CardContent className="p-6">
                 <div className="text-sm font-medium text-slate-500 mb-1">Total Closing Stock</div>
                 <div className="text-2xl font-bold text-slate-900">{formatQuantity(activeData.closingStock)}</div>
-                <div className="text-xs text-slate-400 mt-1">FY 25-26 Ending</div>
+                <div className="text-xs text-slate-400 mt-1">{basePeriodLabel} Ending</div>
               </CardContent>
             </Card>
             <Card>

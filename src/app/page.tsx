@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { saveProcessedData, loadProcessedData } from '@/lib/db';
+import { loadProcessedData } from '@/lib/db';
 import { ValidationIssue } from '@/types';
 import { formatQuantity, formatCurrencyINR, cn } from '@/lib/utils';
-import { Server, AlertCircle, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Server, AlertCircle, CheckCircle2, AlertTriangle, ArrowRight, RefreshCcw } from 'lucide-react';
 
 export default function DataWorkspace() {
   const router = useRouter();
@@ -35,11 +35,10 @@ export default function DataWorkspace() {
         throw new Error(d.error || 'Failed to process files');
       }
       const data = await res.json();
-      await saveProcessedData(data);
       setIssues(data.issues);
       setHasData(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to process files');
     } finally {
       setLoading(false);
     }
@@ -51,7 +50,7 @@ export default function DataWorkspace() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">VARDHNAM BUSINESS INTELLIGENCE DASHBOARD</h1>
-        <p className="text-slate-500 mt-1">FY 2025–26 Purchase-to-Demand Intelligence</p>
+        <p className="text-slate-500 mt-1">FY 2024–25 Purchase-to-Demand Intelligence</p>
       </div>
 
       <Card>
@@ -63,12 +62,12 @@ export default function DataWorkspace() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-slate-600">
-            This MVP processes the default FY 2025-26 Excel and CSV datasets securely from the local filesystem.
-            No data is transmitted externally.
+            Local data fetching has been disabled. For live, continuously-updated data pulled directly from Tally for FY 2024-25, use{' '}
+            <a href="/sync" className="text-blue-600 font-medium hover:underline">Tally Sync</a> instead.
           </p>
           <div className="flex items-center gap-4">
-            <Button onClick={handleProcess} disabled={loading}>
-              {loading ? 'Processing...' : 'Process Default Dataset'}
+            <Button variant="outline" onClick={() => router.push('/sync')}>
+              <RefreshCcw className="mr-2 h-4 w-4" /> Tally Sync
             </Button>
             {hasData && (
               <Button variant="secondary" onClick={() => router.push('/dashboard')}>

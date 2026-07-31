@@ -55,6 +55,8 @@ export async function parsePurchase(
       originalItemName: String(originalItemName).trim(),
       normalisedItemName: '',
       skuId: null,
+      quantity: quantityKg,
+      unit: row.unit || null,
       quantityKg,
       originalQuantity: quantityKg,
       originalUnit: row.unit || null,

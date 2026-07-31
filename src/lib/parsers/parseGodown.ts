@@ -91,6 +91,8 @@ export async function parseGodown(
       originalItemName,
       normalisedItemName: '', // To be filled by SKU Mapper
       skuId: null,
+      closingQuantity: quantityKg,
+      unit: null,
       closingQuantityKg: quantityKg,
       originalClosingQuantity: quantityKg,
       originalUnit,

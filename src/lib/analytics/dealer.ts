@@ -3,7 +3,7 @@ import {
   ProcessedSalesReturnRecord,
   SkuMasterRecord,
 } from '@/types';
-import { calculateReturnRate } from './index';
+import { calculateReturnRate, filterByCompany, filterByFinancialYear, type MetricsOptions } from './index';
 
 export interface MonthlyDealerPattern {
   month: string;
@@ -55,20 +55,33 @@ const FINANCIAL_MONTHS = [
 ];
 
 export function aggregateByDealer(
-  sales: ProcessedSalesRecord[],
-  returns: ProcessedSalesReturnRecord[],
-  skuMaster: SkuMasterRecord[]
+  allSales: ProcessedSalesRecord[],
+  allReturns: ProcessedSalesReturnRecord[],
+  skuMaster: SkuMasterRecord[],
+  options?: MetricsOptions
 ): DealerMetrics[] {
-  const isSeed = (skuId: string | null) => {
+  const sales = filterByFinancialYear(
+    filterByCompany(allSales, options?.company),
+    options?.financialYear
+  );
+  const returns = filterByFinancialYear(
+    filterByCompany(allReturns, options?.company),
+    options?.financialYear
+  );
+  const category = options?.category ?? null;
+  const byId = new Map(skuMaster.map((s) => [s.skuId, s]));
+
+  /**
+   * A row counts unless a category filter is active and excludes it. The default
+   * is everything, so dealer totals stay consistent with the headline figures.
+   */
+  const inScope = (skuId: string | null) => {
+    if (!category) return true;
     if (!skuId) return false;
-    const sku = skuMaster.find((s) => s.skuId === skuId);
-    return sku?.category === 'Seed';
+    return byId.get(skuId)?.category === category;
   };
 
-  const getSkuInfo = (skuId: string | null) => {
-    if (!skuId) return null;
-    return skuMaster.find((s) => s.skuId === skuId) || null;
-  };
+  const getSkuInfo = (skuId: string | null) => (skuId ? byId.get(skuId) || null : null);
 
   const getMonthName = (date: Date | null) => {
     if (!date) return 'Unknown';
@@ -104,7 +117,7 @@ export function aggregateByDealer(
   let totalPhysicalReturn = 0;
 
   sales.forEach(r => {
-    if (r.validationStatus === 'EXCLUDED' || !isSeed(r.skuId)) return;
+    if (r.validationStatus === 'EXCLUDED' || r.isCancelled || r.isOptional || !inScope(r.skuId)) return;
     const m = getOrCreate(r.party);
     const qty = r.quantityKg || 0;
     const val = r.value || 0;
@@ -132,7 +145,9 @@ export function aggregateByDealer(
   });
 
   returns.forEach(r => {
-    if (r.validationStatus === 'EXCLUDED' || !isSeed(r.skuId)) return;
+    if (r.validationStatus === 'EXCLUDED' || r.isCancelled || r.isOptional || !inScope(r.skuId)) return;
+    // Value-only credit notes move no goods, so they must not count as returns here.
+    if (r.returnKind === 'VALUE_ONLY') return;
     // Do not implicitly create dealers if they only have returns (or maybe we do, since they are parties)
     const m = getOrCreate(r.party);
     const qty = r.returnQuantityKg || 0;

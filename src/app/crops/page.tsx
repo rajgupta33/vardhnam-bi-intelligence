@@ -1,33 +1,53 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { loadProcessedData } from '@/lib/db';
-import { aggregateByCrop, CropMetrics, aggregateBySku, SkuMetrics, aggregateByDealer, DealerMetrics } from '@/lib/analytics';
+import { loadProcessedData, type ProcessedDataset } from '@/lib/db';
+import { aggregateByCrop, CropMetrics, aggregateBySku, SkuMetrics, aggregateByDealer, DealerMetrics, listCompanies, listFinancialYears, listCategories } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
 import { ArrowRight, Package, Activity, Undo2, Scale, Boxes } from 'lucide-react';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 
 export default function CropIntelligence() {
-  const [cropData, setCropData] = useState<CropMetrics[]>([]);
-  const [skuData, setSkuData] = useState<SkuMetrics[]>([]);
-  const [dealerData, setDealerData] = useState<DealerMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
   const [selectedCrop, setSelectedCrop] = useState<string>('');
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProcessedData().then(data => {
-      if (data.sales && data.skuMaster) {
-        const crops = aggregateByCrop(data.sales, data.purchase, data.returns, data.stock, data.skuMaster);
-        const skus = aggregateBySku(data.sales, data.purchase, data.returns, data.stock, data.skuMaster);
-        const dealers = aggregateByDealer(data.sales, data.returns, data.skuMaster);
-        setCropData(crops);
-        setSkuData(skus);
-        setDealerData(dealers);
-        if (crops.length > 0) {
-          setSelectedCrop(crops[0].crop);
-        }
-      }
+    const load = () => loadProcessedData().then(d => {
+      if (d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+
+  const scope = { company, financialYear, category };
+
+  const cropData: CropMetrics[] = useMemo(
+    () => (data ? aggregateByCrop(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
+  const skuData: SkuMetrics[] = useMemo(
+    () => (data ? aggregateBySku(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
+  const dealerData: DealerMetrics[] = useMemo(
+    () => (data ? aggregateByDealer(data.sales, data.returns, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
+
+  useEffect(() => {
+    if (cropData.length > 0) {
+      setSelectedCrop((prev) => (prev && cropData.some((c) => c.crop === prev) ? prev : cropData[0].crop));
+    }
+  }, [cropData]);
 
   const activeCrop = cropData.find(c => c.crop === selectedCrop);
   const activeSkus = skuData.filter(s => s.crop === selectedCrop);
@@ -50,13 +70,26 @@ export default function CropIntelligence() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">CROP INTELLIGENCE</h1>
           <p className="text-slate-500 mt-1">Deep-dive analysis by crop</p>
         </div>
+        <ScopeFilter
+          companies={companies}
+          financialYears={financialYears}
+          categories={categories}
+          company={company}
+          financialYear={financialYear}
+          category={category}
+          onCompanyChange={setCompany}
+          onFinancialYearChange={setFinancialYear}
+          onCategoryChange={setCategory}
+        />
+      </div>
+      <div className="flex items-end justify-end">
         <div>
-          <select 
+          <select
             className="border-slate-200 rounded-md text-sm font-medium focus:ring-blue-500 p-2.5 bg-white shadow-sm border min-w-[200px]"
             value={selectedCrop}
             onChange={e => setSelectedCrop(e.target.value)}

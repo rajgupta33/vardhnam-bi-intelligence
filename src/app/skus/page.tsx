@@ -1,27 +1,44 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { loadProcessedData } from '@/lib/db';
-import { aggregateBySku, SkuMetrics, aggregateByDealer, DealerMetrics } from '@/lib/analytics';
+import { loadProcessedData, type ProcessedDataset } from '@/lib/db';
+import { aggregateBySku, SkuMetrics, aggregateByDealer, DealerMetrics, listCompanies, listFinancialYears, listCategories } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR } from '@/lib/utils';
 import { Search, X, ArrowRight } from 'lucide-react';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 
 export default function SkuIntelligence() {
-  const [skuData, setSkuData] = useState<SkuMetrics[]>([]);
-  const [dealerData, setDealerData] = useState<DealerMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSku, setSelectedSku] = useState<SkuMetrics | null>(null);
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProcessedData().then(data => {
-      if (data.sales && data.skuMaster) {
-        setSkuData(aggregateBySku(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-        setDealerData(aggregateByDealer(data.sales, data.returns, data.skuMaster));
-      }
+    const load = () => loadProcessedData().then(d => {
+      if (d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+  const scope = { company, financialYear, category };
+
+  const skuData: SkuMetrics[] = useMemo(
+    () => (data ? aggregateBySku(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
+  const dealerData: DealerMetrics[] = useMemo(
+    () => (data ? aggregateByDealer(data.sales, data.returns, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
 
   const filtered = skuData.filter(s => 
     s.uniqueSkuName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -56,9 +73,22 @@ export default function SkuIntelligence() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 relative">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">SKU INTELLIGENCE</h1>
-        <p className="text-slate-500 mt-1">Detailed performance by product</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">SKU INTELLIGENCE</h1>
+          <p className="text-slate-500 mt-1">Detailed performance by product</p>
+        </div>
+        <ScopeFilter
+          companies={companies}
+          financialYears={financialYears}
+          categories={categories}
+          company={company}
+          financialYear={financialYear}
+          category={category}
+          onCompanyChange={setCompany}
+          onFinancialYearChange={setFinancialYear}
+          onCategoryChange={setCategory}
+        />
       </div>
 
       <Card>

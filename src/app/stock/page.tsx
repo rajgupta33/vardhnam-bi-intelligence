@@ -1,26 +1,43 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { loadProcessedData } from '@/lib/db';
-import { aggregateBySku, SkuMetrics, aggregateByCrop, CropMetrics } from '@/lib/analytics';
+import { loadProcessedData, type ProcessedDataset } from '@/lib/db';
+import { aggregateBySku, SkuMetrics, aggregateByCrop, CropMetrics, listCompanies, listFinancialYears, listCategories } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Boxes, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 
 export default function StockAnalysis() {
-  const [skuData, setSkuData] = useState<SkuMetrics[]>([]);
-  const [cropData, setCropData] = useState<CropMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
   const [mode, setMode] = useState<'Quantity' | 'Value'>('Quantity');
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProcessedData().then(data => {
-      if (data.sales && data.skuMaster) {
-        setSkuData(aggregateBySku(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-        setCropData(aggregateByCrop(data.sales, data.purchase, data.returns, data.stock, data.skuMaster));
-      }
+    const load = () => loadProcessedData().then(d => {
+      if (d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+  const scope = { company, financialYear, category };
+
+  const skuData: SkuMetrics[] = useMemo(
+    () => (data ? aggregateBySku(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
+  const cropData: CropMetrics[] = useMemo(
+    () => (data ? aggregateByCrop(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, scope) : []),
+    [data, company, financialYear, category]
+  );
 
   const totalStockQty = cropData.reduce((acc, c) => acc + c.closingStockQuantity, 0);
   const totalStockValue = cropData.reduce((acc, c) => acc + c.closingStockValue, 0);
@@ -46,24 +63,40 @@ export default function StockAnalysis() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">CLOSING STOCK ANALYSIS</h1>
-          <p className="text-slate-500 mt-1">Review closing positions and stock flags</p>
+          <p className="text-slate-500 mt-1">
+            Review closing positions and stock flags
+            {!financialYear && financialYears.length > 1 && ` — showing the latest snapshot (${financialYears[financialYears.length - 1]})`}
+          </p>
         </div>
-        <div className="flex border rounded-md overflow-hidden shadow-sm">
-          <button 
+        <div className="flex flex-wrap items-end gap-4">
+          <ScopeFilter
+            companies={companies}
+            financialYears={financialYears}
+            categories={categories}
+            company={company}
+            financialYear={financialYear}
+            category={category}
+            onCompanyChange={setCompany}
+            onFinancialYearChange={setFinancialYear}
+            onCategoryChange={setCategory}
+          />
+          <div className="flex border rounded-md overflow-hidden shadow-sm">
+          <button
             className={`px-4 py-2 text-sm font-medium transition-colors ${mode === 'Quantity' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             onClick={() => setMode('Quantity')}
           >
             Quantity
           </button>
-          <button 
+          <button
             className={`px-4 py-2 text-sm font-medium transition-colors ${mode === 'Value' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             onClick={() => setMode('Value')}
           >
             Value
           </button>
+          </div>
         </div>
       </div>
 

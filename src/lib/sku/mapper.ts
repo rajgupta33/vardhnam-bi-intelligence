@@ -1,10 +1,11 @@
-import { 
-  ProcessedPurchaseRecord, 
-  ProcessedSalesRecord, 
-  ProcessedSalesReturnRecord, 
-  ProcessedStockRecord, 
-  SkuMappingRecord, 
-  SkuMasterRecord 
+import {
+  ProcessedPurchaseRecord,
+  ProcessedSalesRecord,
+  ProcessedSalesReturnRecord,
+  ProcessedPurchaseReturnRecord,
+  ProcessedStockRecord,
+  SkuMappingRecord,
+  SkuMasterRecord
 } from '@/types';
 import { normalizeItemName } from './normalisation';
 import { ValidationEngine } from '../validation/engine';
@@ -93,6 +94,20 @@ export class SkuMapper {
       } else {
         r.validationStatus = 'WARNING';
         this.validationEngine.logIssue('Sales Return', r.sourceRowNumber, 'Warning', 'UNMAPPED_SKU', 'SKU unmapped', r.originalItemName, undefined, r.returnQuantityKg || 0, r.returnValue || 0);
+      }
+    });
+  }
+
+  public applyToPurchaseReturns(records: ProcessedPurchaseReturnRecord[]): void {
+    records.forEach(r => {
+      if (r.validationStatus === 'EXCLUDED') return;
+      r.normalisedItemName = normalizeItemName(r.originalItemName);
+      const sku = this.getSku(r.originalItemName, 'Purchase Return');
+      if (sku) {
+        r.skuId = sku.skuId;
+      } else {
+        r.validationStatus = 'WARNING';
+        this.validationEngine.logIssue('Purchase Return', r.sourceRowNumber, 'Warning', 'UNMAPPED_SKU', 'SKU unmapped', r.originalItemName, undefined, r.returnQuantityKg || 0, r.returnValue || 0);
       }
     });
   }

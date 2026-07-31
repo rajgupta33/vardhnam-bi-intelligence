@@ -3,27 +3,41 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { loadProcessedData } from '@/lib/db';
+import { loadProcessedData, type ProcessedDataset } from '@/lib/db';
 import { DealerMetrics, aggregateByDealer, calculateDealerConcentration } from '@/lib/analytics/dealer';
+import { listCompanies, listFinancialYears, listCategories } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
 import { Users, TrendingDown, ArrowRight, X, TrendingUp } from 'lucide-react';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   LineChart, Line, Legend
 } from 'recharts';
+import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 
 export default function DealersIntelligence() {
-  const [dealers, setDealers] = useState<DealerMetrics[]>([]);
+  const [data, setData] = useState<ProcessedDataset | null>(null);
   const [selectedDealer, setSelectedDealer] = useState<DealerMetrics | null>(null);
+  const [company, setCompany] = useState<string | null>(null);
+  const [financialYear, setFinancialYear] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProcessedData().then((data) => {
-      if (data && data.sales && data.skuMaster) {
-        const computedDealers = aggregateByDealer(data.sales, data.returns || [], data.skuMaster);
-        setDealers(computedDealers);
-      }
+    const load = () => loadProcessedData().then((d) => {
+      if (d && d.sales && d.skuMaster) setData(d);
     });
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
+  const financialYears = useMemo(() => (data ? listFinancialYears(data.sales) : []), [data]);
+  const categories = useMemo(() => (data ? listCategories(data.skuMaster) : []), [data]);
+
+  const dealers: DealerMetrics[] = useMemo(
+    () => (data ? aggregateByDealer(data.sales, data.returns || [], data.skuMaster, { company, financialYear, category }) : []),
+    [data, company, financialYear, category]
+  );
 
   // Summary Metrics
   const summary = useMemo(() => {
@@ -54,7 +68,9 @@ export default function DealersIntelligence() {
   const top10Value = [...dealers].sort((a, b) => b.grossSalesValue - a.grossSalesValue).slice(0, 10);
   const top10Return = [...dealers].sort((a, b) => b.salesReturnQuantity - a.salesReturnQuantity).slice(0, 10);
 
-  if (dealers.length === 0) {
+  // Only the pre-load state gets the full-page message — a filter combination
+  // that legitimately yields zero dealers should still render the (empty) page.
+  if (!data) {
     return (
       <div className="p-4 md:p-8 max-w-7xl mx-auto flex items-center justify-center h-full text-slate-500">
         No dealer data available. Please process the dataset in the Data Workspace.
@@ -64,9 +80,22 @@ export default function DealersIntelligence() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 relative">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">DEALER INTELLIGENCE</h1>
-        <p className="text-slate-500 mt-1">Party performance, return behaviour, and net demand concentration.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">DEALER INTELLIGENCE</h1>
+          <p className="text-slate-500 mt-1">Party performance, return behaviour, and net demand concentration.</p>
+        </div>
+        <ScopeFilter
+          companies={companies}
+          financialYears={financialYears}
+          categories={categories}
+          company={company}
+          financialYear={financialYear}
+          category={category}
+          onCompanyChange={setCompany}
+          onFinancialYearChange={setFinancialYear}
+          onCategoryChange={setCategory}
+        />
       </div>
 
       {/* KPI Cards */}

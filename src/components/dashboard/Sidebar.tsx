@@ -14,7 +14,9 @@ import {
   Database,
   Menu,
   X,
-  Users
+  Users,
+  RefreshCcw,
+  Scale
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -26,6 +28,8 @@ const navItems = [
   { name: 'Sales Return Analysis', href: '/returns', icon: Undo2 },
   { name: 'Stock Analysis', href: '/stock', icon: Boxes },
   { name: 'Forecast Planner', href: '/forecast', icon: TrendingUp },
+  { name: 'Reconciliation', href: '/reconciliation', icon: Scale },
+  { name: 'Tally Sync', href: '/sync', icon: RefreshCcw },
   { name: 'Data Workspace', href: '/', icon: Database },
 ];
 
