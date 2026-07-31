@@ -7,6 +7,7 @@ import {
   buildLedgerVoucherExportRequest,
 } from './requests';
 import { getTallyCompanies, TallyCompanyConfig } from './companies';
+import { extractLedgerAdjustments } from './adjustments';
 import { parseTallySales } from '../parsers/parseTallySales';
 import { parseTallyPurchase } from '../parsers/parseTallyPurchase';
 import { parseTallyReturns } from '../parsers/parseTallyReturns';
@@ -98,21 +99,39 @@ async function extractCompany(
 ): Promise<CompanyExtract> {
   const adjustmentTypes = adjustmentVoucherTypes();
 
-  const [salesXml, purchaseXml, returnsXml, debitNoteXml, stockXml, ...adjustmentXmls] = await Promise.all([
-    queryTally(buildVoucherExportRequest(company.name, 'Sales', fromDate, toDate)),
-    queryTally(buildVoucherExportRequest(company.name, 'Purchase', fromDate, toDate)),
-    queryTally(buildVoucherExportRequest(company.name, 'Credit Note', fromDate, toDate)),
-    queryTally(buildVoucherExportRequest(company.name, 'Debit Note', fromDate, toDate)),
-    queryTally(buildStockExportRequest(company.name)),
-    ...adjustmentTypes.map((type) =>
-      queryTally(buildLedgerVoucherExportRequest(company.name, type, fromDate, toDate))
-    ),
-  ]);
+  const [salesXml, purchaseXml, returnsXml, debitNoteXml, debitNoteLedgerXml, stockXml, ...adjustmentXmls] =
+    await Promise.all([
+      queryTally(buildVoucherExportRequest(company.name, 'Sales', fromDate, toDate)),
+      queryTally(buildVoucherExportRequest(company.name, 'Purchase', fromDate, toDate)),
+      queryTally(buildVoucherExportRequest(company.name, 'Credit Note', fromDate, toDate)),
+      queryTally(buildVoucherExportRequest(company.name, 'Debit Note', fromDate, toDate)),
+      // Second pass over the same Debit Notes, for their ledger postings rather
+      // than their inventory: a Debit Note raised on a customer credits Sales
+      // and is not a purchase return at all. See parseTallyDebitNotes.
+      queryTally(buildLedgerVoucherExportRequest(company.name, 'Debit Note', fromDate, toDate)),
+      queryTally(buildStockExportRequest(company.name, fromDate, toDate)),
+      ...adjustmentTypes.map((type) =>
+        queryTally(buildLedgerVoucherExportRequest(company.name, type, fromDate, toDate))
+      ),
+    ]);
+
+  // Voucher number → the ledger group its postings landed in. Built before the
+  // inventory rows are parsed so every returned line can be tagged with it.
+  const debitNoteLedgerKinds = new Map<string, 'SALES' | 'PURCHASE'>();
+  for (const a of extractLedgerAdjustments(debitNoteLedgerXml, company.label).adjustments) {
+    const key = a.voucherNo.trim();
+    if (key) debitNoteLedgerKinds.set(key, a.kind);
+  }
 
   const salesResult = parseTallySales(salesXml, validationEngine, company.label);
   const purchaseResult = parseTallyPurchase(purchaseXml, validationEngine, company.label);
   const returnsResult = parseTallyReturns(returnsXml, validationEngine, company.label);
-  const purchaseReturnsResult = parseTallyDebitNotes(debitNoteXml, validationEngine, company.label);
+  const purchaseReturnsResult = parseTallyDebitNotes(
+    debitNoteXml,
+    validationEngine,
+    company.label,
+    debitNoteLedgerKinds
+  );
   const stock = parseTallyStock(stockXml, validationEngine, company.label, company.financialYear);
   const adjustments = adjustmentXmls.flatMap((xml) =>
     parseTallyAdjustments(xml, validationEngine, company.label)

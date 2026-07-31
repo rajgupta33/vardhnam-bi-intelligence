@@ -221,7 +221,9 @@ function lookupExpected(expected: ExpectedTotals, company: string | null, fy: st
  * must tie to Tally's own group totals for that same slice:
  *
  *   Sales Accounts    = gross sales − all credit notes − sales journals
- *   Purchase Accounts = purchase vouchers + purchase journals − debit notes
+ *                       + debit notes that credit a sales ledger
+ *   Purchase Accounts = purchase vouchers + purchase journals
+ *                       − debit notes that debit a purchase ledger
  */
 function ledgerChecksFor(
   company: string | null,
@@ -238,16 +240,27 @@ function ledgerChecksFor(
   const grossSales = sum(live(scope(input.sales)), (r) => r.value);
   const creditNotes = sum(live(scope(input.returns)), (r) => r.returnValue);
   const purchaseValue = sum(live(scope(input.purchase)), (r) => r.value);
-  // Debit Notes are the purchase-side mirror of Credit Notes: goods sent back
-  // to a supplier reduce the purchase balance. Confirmed live — omitting this
-  // overstated Telangana's Purchase Accounts by exactly its value (₹7,38,900).
-  const debitNotes = sum(live(scope(input.purchaseReturns ?? [])), (r) => r.returnValue);
+  // A Debit Note reduces Purchase only when it actually posts to a Purchase
+  // ledger. Ones raised on a customer credit Sales instead — a rate-difference
+  // correction that raises revenue and never touches Purchase — so they are
+  // split by the ledger they hit, not by voucher type. Booking both as purchase
+  // returns put U.P FY23-24 out by ₹97,732 on each side simultaneously.
+  // Unclassified rows stay on the purchase side, preserving prior behaviour.
+  const debitNoteRows = live(scope(input.purchaseReturns ?? []));
+  const debitNotes = sum(
+    debitNoteRows.filter((r) => r.ledgerKind !== 'SALES'),
+    (r) => r.returnValue
+  );
+  const salesDebitNotes = sum(
+    debitNoteRows.filter((r) => r.ledgerKind === 'SALES'),
+    (r) => r.returnValue
+  );
 
   const adj = live(scope(input.adjustments));
   const salesAdjValue = Math.abs(sum(adj.filter((a) => a.kind === 'SALES'), (a) => a.amount));
   const purchaseAdjValue = Math.abs(sum(adj.filter((a) => a.kind === 'PURCHASE'), (a) => a.amount));
 
-  const salesComputed = grossSales - creditNotes - salesAdjValue;
+  const salesComputed = grossSales - creditNotes - salesAdjValue + salesDebitNotes;
   const purchaseComputed = purchaseValue + purchaseAdjValue - debitNotes;
 
   const sExp = lookupExpected(salesExpected, company, financialYear);
@@ -266,6 +279,7 @@ function ledgerChecksFor(
         { label: 'Gross sales (inventory lines)', value: grossSales },
         { label: 'Less: all credit notes', value: -creditNotes },
         { label: 'Less: journal postings to sales ledgers', value: -salesAdjValue },
+        { label: 'Plus: debit notes crediting sales ledgers', value: salesDebitNotes },
       ],
     },
     {
@@ -278,7 +292,7 @@ function ledgerChecksFor(
       components: [
         { label: 'Purchase vouchers (inventory lines)', value: purchaseValue },
         { label: 'Plus: journal postings to purchase ledgers', value: purchaseAdjValue },
-        { label: 'Less: debit notes (purchase returns)', value: -debitNotes },
+        { label: 'Less: debit notes posting to purchase ledgers', value: -debitNotes },
       ],
     },
   ];

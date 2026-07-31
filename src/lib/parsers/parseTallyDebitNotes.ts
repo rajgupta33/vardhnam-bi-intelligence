@@ -6,17 +6,27 @@ import { financialYearOf } from '../tally/financialYear';
 import { TallyParseResult } from './parseTallySales';
 
 /**
- * Debit Notes are the purchase-side mirror of Credit Notes: goods physically
- * sent back to a supplier, or a pure value adjustment (rate correction) with no
- * quantity. Omitting them overstates purchase totals by exactly their value —
- * confirmed live against Tally (Telangana FY24-25: one Debit Note, ₹7,38,900,
- * 3,284 KGS Maize returned to K C Agroteck) — so each line is tagged the same
- * way returns are.
+ * Debit Notes are NOT all purchase returns.
+ *
+ * Two distinct instruments share the voucher type, exactly as Credit Notes turned
+ * out to cover both physical returns and value-only rate adjustments:
+ *
+ *   - raised on a SUPPLIER  → debits a Purchase ledger → reduces Purchase Accounts
+ *     (Telangana FY24-25: ₹7,38,900, 3,284 KGS Maize back to K C Agroteck)
+ *   - raised on a CUSTOMER  → credits the Sales ledger → increases Sales Accounts
+ *     (U.P FY23-24: ₹97,732 across three rate-difference notes)
+ *
+ * The voucher type cannot distinguish them; only the ledger it posts to can. So
+ * `ledgerKindByVoucher` is built from the same voucher's ledger entries and each
+ * row is tagged with it. Treating every Debit Note as a purchase return threw
+ * Sales *and* Purchase out by ₹97,732 each in U.P FY23-24 — one misclassification
+ * producing two variances that looked unrelated.
  */
 export function parseTallyDebitNotes(
   xml: string,
   validationEngine: ValidationEngine,
-  company = 'default'
+  company = 'default',
+  ledgerKindByVoucher: Map<string, 'SALES' | 'PURCHASE'> = new Map()
 ): TallyParseResult<ProcessedPurchaseReturnRecord> {
   const { rows, stats } = extractVoucherLineItems(xml, company);
   logExtractionRejections(`Tally Debit Note (${company})`, stats, validationEngine);
@@ -49,6 +59,7 @@ export function parseTallyDebitNotes(
       originalQuantity: row.quantity,
       originalUnit: row.unit,
       returnValue: Math.abs(row.amount),
+      ledgerKind: ledgerKindByVoucher.get(row.voucherNo.trim()) ?? null,
     };
   });
 

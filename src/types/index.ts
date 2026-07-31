@@ -168,6 +168,21 @@ export interface ProcessedPurchaseReturnRecord extends BaseProcessedRecord {
   originalQuantity: number | null;
   originalUnit: string | null;
   returnValue: number | null;
+  /**
+   * Which ledger group this Debit Note actually posts to, read from the
+   * voucher's own ledger entries rather than assumed from its voucher type.
+   *
+   * A Debit Note is not always a purchase return. Verified live 2026-07-31:
+   * U.P FY23-24's three Debit Notes (₹97,732) are raised on *customers*
+   * (Vishal Beej Bhandar, Ajeet Pratap Shukla, Sri Ganpati Enterprises) and
+   * credit the Sales ledger — rate-difference corrections that increase
+   * revenue and never touch Purchase. Telangana FY24-25's Debit Note is the
+   * opposite: a genuine ₹7,38,900 Maize return that debits Purchase.
+   *
+   * Booking both the same way put Sales and Purchase each out by ₹97,732.
+   * `null` means the posting could not be classified.
+   */
+  ledgerKind: 'SALES' | 'PURCHASE' | null;
 }
 
 export interface ProcessedStockRecord extends BaseProcessedRecord {

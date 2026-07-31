@@ -31,7 +31,25 @@ export interface LocalFileSource {
   note?: string;
 }
 
-export const LOCAL_FILE_SOURCES: LocalFileSource[] = [
+/**
+ * RETIRED 2026-07-31 — FY2025-26 now comes from Tally directly.
+ *
+ * The user opened `…(U.P) (25-26)` and `…(Telangana)(25-26)` in Tally, both
+ * holding real vouchers (U.P 302 sales / 65 purchase, Telangana 11 / 16). These
+ * registers cover the same year, so ingesting both sources double-counts it —
+ * roughly ₹6 Cr of sales.
+ *
+ * The duplicate detector cannot be relied on to catch it: these workbooks were
+ * converted from PDF exports, so an item or party name differing by a space or
+ * a capital letter produces a different composite rowKey and the repeat passes
+ * through silently.
+ *
+ * Kept rather than deleted — this is the verified file→company→year mapping,
+ * and it is the only record of how FY2025-26 was sourced before Tally had it.
+ * To re-enable, move entries back into LOCAL_FILE_SOURCES and first confirm
+ * Tally does not also serve that year.
+ */
+export const LOCAL_FILE_SOURCES_RETIRED: LocalFileSource[] = [
   {
     file: 'DayBook_1_converted.xlsx',
     sheet: 'Item_Lines',
@@ -72,6 +90,13 @@ export const LOCAL_FILE_SOURCES: LocalFileSource[] = [
     note: 'Closing stock snapshot for 1-Apr-25 → 31-Mar-26. No Telangana equivalent exists.',
   },
 ];
+
+/**
+ * Active local-file sources. Empty: every financial year now comes from Tally.
+ * The merge layer in `fetchAll.ts` stays in place so another source can be added
+ * without rework — see LOCAL_FILE_SOURCES_RETIRED above for why these went away.
+ */
+export const LOCAL_FILE_SOURCES: LocalFileSource[] = [];
 
 /**
  * Deliberately NOT ingested.

@@ -26,7 +26,16 @@ export function startTallyScheduler() {
     return;
   }
 
-  const intervalMinutes = Number(process.env.TALLY_SYNC_INTERVAL_MINUTES) || 5;
+  // `0` / `off` serves the database-only mode: the dashboard already reads
+  // exclusively from SQLite, so with polling off it keeps working from the last
+  // synced snapshot and never touches Tally until someone syncs by hand.
+  const raw = (process.env.TALLY_SYNC_INTERVAL_MINUTES ?? '').trim().toLowerCase();
+  if (raw === '0' || raw === 'off') {
+    console.log('[tally-sync] background sync disabled by TALLY_SYNC_INTERVAL_MINUTES; serving stored data only');
+    return;
+  }
+
+  const intervalMinutes = Number(raw) || 5;
   const intervalMs = intervalMinutes * 60 * 1000;
 
   let running = false;

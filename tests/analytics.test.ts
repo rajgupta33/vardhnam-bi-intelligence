@@ -110,8 +110,8 @@ test('debit notes (purchase returns) reduce net purchase value, mirroring credit
   ];
 
   const purchaseReturns: ProcessedPurchaseReturnRecord[] = [
-    { id: '1', sourceRowNumber: 1, validationStatus: 'VALID', date: null, voucherNo: 'DN1', supplier: 'S', originalItemName: 'S1', normalisedItemName: 'S1', skuId: 'S1', returnKind: 'PHYSICAL', returnQuantity: 20, unit: 'KGS', returnQuantityKg: 20, returnValue: 2000, originalQuantity: null, originalUnit: null },
-    { id: '2', sourceRowNumber: 2, validationStatus: 'VALID', date: null, voucherNo: 'DN2', supplier: 'S', originalItemName: 'S1', normalisedItemName: 'S1', skuId: 'S1', returnKind: 'VALUE_ONLY', returnQuantity: 0, unit: null, returnQuantityKg: 0, returnValue: 500, originalQuantity: null, originalUnit: null },
+    { id: '1', sourceRowNumber: 1, validationStatus: 'VALID', date: null, voucherNo: 'DN1', supplier: 'S', originalItemName: 'S1', normalisedItemName: 'S1', skuId: 'S1', returnKind: 'PHYSICAL', returnQuantity: 20, unit: 'KGS', returnQuantityKg: 20, returnValue: 2000, originalQuantity: null, originalUnit: null, ledgerKind: 'PURCHASE' },
+    { id: '2', sourceRowNumber: 2, validationStatus: 'VALID', date: null, voucherNo: 'DN2', supplier: 'S', originalItemName: 'S1', normalisedItemName: 'S1', skuId: 'S1', returnKind: 'VALUE_ONLY', returnQuantity: 0, unit: null, returnQuantityKg: 0, returnValue: 500, originalQuantity: null, originalUnit: null, ledgerKind: 'PURCHASE' },
   ];
 
   const metrics = calculateGlobalMetrics([], purchase, [], purchaseReturns, [], skuMaster);

@@ -8,6 +8,30 @@ function escapeXml(value: string): string {
 }
 
 /**
+ * SVCURRENTDATE is mandatory, not decorative.
+ *
+ * A Voucher collection is walked against the company's *active period*, and
+ * SVFROMDATE/SVTODATE alone do not set it. When a company's active period does
+ * not span its vouchers — which is the normal state for a company whose books
+ * were imported rather than entered, and which the user sees as "I have to pick
+ * the period manually before anything shows" — Tally answers with an empty
+ * collection and HTTP 200. No error, no warning, just nothing.
+ *
+ * That false negative is expensive: it previously led to the conclusion that
+ * two FY23-24 company files held masters but no transactions, and that the
+ * user's voucher import into Tally was broken. Both were wrong. The vouchers
+ * were there the whole time; the query could not see them. Verified live on
+ * 2026-07-31 — the same company returned 0 vouchers without SVCURRENTDATE and
+ * 1227 with it, including exactly the 21 Purchase vouchers Tally's own
+ * Purchase Register was showing on screen at the time.
+ */
+function periodVariables(fromDate: string, toDate: string): string {
+  return `<SVFROMDATE TYPE="Date">${escapeXml(fromDate)}</SVFROMDATE>
+    <SVTODATE TYPE="Date">${escapeXml(toDate)}</SVTODATE>
+    <SVCURRENTDATE TYPE="Date">${escapeXml(toDate)}</SVCURRENTDATE>`;
+}
+
+/**
  * Tally's HTTP gateway ignores bare ad-hoc <COLLECTION> requests for TYPE=Data;
  * TYPE=Collection with ISINITIALIZE="Yes" is what actually dumps native XML
  * (VOUCHER / STOCKITEM tags) headlessly regardless of the active Tally UI screen.
@@ -29,8 +53,7 @@ export function buildVoucherExportRequest(
   <DESC>
    <STATICVARIABLES>
     <SVCURRENTCOMPANY>${escapeXml(company)}</SVCURRENTCOMPANY>
-    <SVFROMDATE>${escapeXml(fromDate)}</SVFROMDATE>
-    <SVTODATE>${escapeXml(toDate)}</SVTODATE>
+    ${periodVariables(fromDate, toDate)}
    </STATICVARIABLES>
    <TDL>
     <TDLMESSAGE>
@@ -71,8 +94,7 @@ export function buildLedgerVoucherExportRequest(
   <DESC>
    <STATICVARIABLES>
     <SVCURRENTCOMPANY>${escapeXml(company)}</SVCURRENTCOMPANY>
-    <SVFROMDATE>${escapeXml(fromDate)}</SVFROMDATE>
-    <SVTODATE>${escapeXml(toDate)}</SVTODATE>
+    ${periodVariables(fromDate, toDate)}
    </STATICVARIABLES>
    <TDL>
     <TDLMESSAGE>
@@ -89,7 +111,12 @@ export function buildLedgerVoucherExportRequest(
 </ENVELOPE>`;
 }
 
-export function buildStockExportRequest(company: string): string {
+/**
+ * A closing balance is "as at" a date, so this needs the period pinned for the
+ * same reason the voucher collections do — see periodVariables. Without it the
+ * balances come back for whatever period the company happens to be sitting on.
+ */
+export function buildStockExportRequest(company: string, fromDate: string, toDate: string): string {
   return `<ENVELOPE>
  <HEADER>
   <VERSION>1</VERSION>
@@ -101,6 +128,7 @@ export function buildStockExportRequest(company: string): string {
   <DESC>
    <STATICVARIABLES>
     <SVCURRENTCOMPANY>${escapeXml(company)}</SVCURRENTCOMPANY>
+    ${periodVariables(fromDate, toDate)}
     <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
    </STATICVARIABLES>
    <TDL>

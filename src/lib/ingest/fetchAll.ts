@@ -19,6 +19,7 @@ import { saveProcessedData, saveSyncResult, countStoredRows, SyncResultRecord } 
 import { extractAllCompanies, CompanyExtract } from '../tally/sync';
 import { getTallyCompanies } from '../tally/companies';
 import { runLocalFileSync, LocalFileSyncResult } from '../localfiles/sync';
+import { LOCAL_FILE_SOURCES } from '../localfiles/manifest';
 
 /**
  * Loads every configured source into one dataset.
@@ -129,8 +130,13 @@ export async function runFullIngest(): Promise<FetchAllResult> {
   }
 
   // --- Source 2: local converted registers -------------------------------
+  // Skipped entirely when nothing is configured, rather than reported as a
+  // source that returned zero rows: the partial-load guard below treats an
+  // empty source as a failure, and a deliberately retired source is not one.
   let localResult: LocalFileSyncResult | null = null;
-  try {
+  if (LOCAL_FILE_SOURCES.length === 0) {
+    console.log('[ingest] no local file sources configured; Tally is the only source');
+  } else try {
     localResult = runLocalFileSync(validationEngine);
     sales.push(...localResult.sales);
     purchase.push(...localResult.purchase);
