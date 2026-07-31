@@ -27,6 +27,21 @@ import type { ReconciliationReport } from '../reconciliation';
  * columns later without another rewrite.
  */
 
+/**
+ * Turns a storage failure into something safe to send back to the browser.
+ *
+ * An unhandled throw in a route handler reaches a serverless host as a bare 500
+ * with no body, which is indistinguishable from a build failure and hides
+ * whether the cause is configuration, the network, or the query. Driver errors
+ * can quote the connection string, so any credentials are stripped first.
+ */
+export function describeDbError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  return message
+    .replace(/postgres(?:ql)?:\/\/[^\s'"]*/gi, 'postgresql://[redacted]')
+    .replace(/(password\s*[:=]\s*)\S+/gi, '$1[redacted]');
+}
+
 const DATA_TABLES = [
   'sales',
   'purchase',

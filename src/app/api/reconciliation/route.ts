@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { loadReconciliation, loadLastUpdated } from '@/lib/db/store';
+import { loadReconciliation, loadLastUpdated, describeDbError } from '@/lib/db/store';
 
 /**
  * Serves the stored leakage waterfall and ledger checks.
@@ -8,14 +8,20 @@ import { loadReconciliation, loadLastUpdated } from '@/lib/db/store';
  * is exactly what the stored dataset produced.
  */
 export async function GET() {
-  const [report, lastUpdated] = await Promise.all([loadReconciliation(), loadLastUpdated()]);
+  try {
+    const [report, lastUpdated] = await Promise.all([loadReconciliation(), loadLastUpdated()]);
 
-  if (!report) {
-    return NextResponse.json(
-      { error: 'No reconciliation report stored yet. Run a Tally sync first.' },
-      { status: 404 }
-    );
+    if (!report) {
+      return NextResponse.json(
+        { error: 'No reconciliation report stored yet. Run a Tally sync first.' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ report, lastUpdated });
+  } catch (err) {
+    const error = describeDbError(err);
+    console.error('[api/reconciliation] failed:', error);
+    return NextResponse.json({ error }, { status: 500 });
   }
-
-  return NextResponse.json({ report, lastUpdated });
 }
