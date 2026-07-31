@@ -5,24 +5,55 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadProcessedData } from '@/lib/db';
 import { calculateGlobalMetrics, GlobalMetrics, aggregateByCrop, CropMetrics, listCategories, listCompanies, listFinancialYears } from '@/lib/analytics';
 import { formatQuantity, formatCurrencyINR, truncateText } from '@/lib/utils';
-import { Activity, IndianRupee, Package, Scale, TrendingDown, RefreshCcw, Undo2 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { Activity, AlertTriangle, IndianRupee, Package, Scale, TrendingDown, RefreshCcw, Undo2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ScopeFilter } from '@/components/dashboard/ScopeFilter';
 import type { ProcessedDataset } from '@/lib/db';
 
+type KpiCardProps = {
+  title: string;
+  value: string;
+  exactValue: string;
+  icon: LucideIcon;
+  description: string;
+};
+
 export default function CommandCentre() {
   const [data, setData] = useState<ProcessedDataset | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [company, setCompany] = useState<string | null>(null);
   const [financialYear, setFinancialYear] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = () => loadProcessedData().then(d => {
-      if (d.sales && d.skuMaster) setData(d);
-    });
+    let cancelled = false;
+    const load = () => loadProcessedData()
+      .then(d => {
+        if (cancelled) return;
+        if (d.sales.length > 0 && d.skuMaster.length > 0) {
+          setData(d);
+          setLoadError(null);
+        } else {
+          setData(null);
+          setLoadError('No dashboard data is stored yet. Run Fetch All Data from the Sync page on the machine that can reach Tally, then refresh this page.');
+        }
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setData(null);
+        setLoadError(err instanceof Error ? err.message : 'Failed to load data from the server');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     load();
     const interval = setInterval(load, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const companies = useMemo(() => (data ? listCompanies(data.sales) : []), [data]);
@@ -39,8 +70,24 @@ export default function CommandCentre() {
     return aggregateByCrop(data.sales, data.purchase, data.returns, data.purchaseReturns, data.stock, data.skuMaster, { company, financialYear, category });
   }, [data, company, financialYear, category]);
 
-  if (!metrics) {
+  if (loading) {
     return <div className="p-8 text-slate-500 flex h-full items-center justify-center">Loading Command Centre...</div>;
+  }
+
+  if (loadError || !metrics) {
+    return (
+      <div className="p-4 md:p-8 max-w-3xl mx-auto">
+        <Card className="border-red-200">
+          <CardContent className="p-6 flex gap-3 text-red-900">
+            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <h1 className="font-semibold text-slate-900">Dashboard data could not be loaded</h1>
+              <p className="text-sm mt-2 leading-relaxed">{loadError ?? 'The server returned an incomplete dataset.'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const sortedByDemand = [...cropData].sort((a, b) => b.netDemand - a.netDemand).slice(0, 10);
@@ -115,7 +162,7 @@ export default function CommandCentre() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => (val / 1000) + 'k'} />
-                <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
+                <RechartsTooltip formatter={(value: unknown) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
                 <Legend iconType="circle" />
                 <Bar dataKey="purchaseQuantity" name="Purchase Qty" fill="#94a3b8" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="netDemand" name="Net Demand" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -134,7 +181,7 @@ export default function CommandCentre() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="crop" axisLine={false} tickLine={false} tickFormatter={(val) => truncateText(val, 8)} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => (val / 1000) + 'k'} />
-                <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
+                <RechartsTooltip formatter={(value: unknown) => [`${Number(value || 0).toLocaleString()} Kg`, '']} />
                 <Legend iconType="circle" />
                 <Bar dataKey="grossSalesQuantity" name="Gross Sales Qty" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="salesReturnQuantity" name="Sales Return Qty" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -147,7 +194,7 @@ export default function CommandCentre() {
   );
 }
 
-function KpiCard({ title, value, exactValue, icon: Icon, description }: any) {
+function KpiCard({ title, value, exactValue, icon: Icon, description }: KpiCardProps) {
   return (
     <Card className="overflow-hidden group border-slate-200/60 shadow-sm">
       <CardContent className="p-6">

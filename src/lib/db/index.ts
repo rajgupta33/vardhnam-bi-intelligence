@@ -32,20 +32,41 @@ export interface ProcessedDataset {
   lastUpdated: Date | null;
 }
 
+type ApiDataPayload = Partial<{
+  sales: ProcessedSalesRecord[];
+  purchase: ProcessedPurchaseRecord[];
+  returns: ProcessedSalesReturnRecord[];
+  purchaseReturns: ProcessedPurchaseReturnRecord[];
+  stock: ProcessedStockRecord[];
+  adjustments: ProcessedAdjustmentRecord[];
+  issues: ValidationIssue[];
+  skuMaster: SkuMasterRecord[];
+  lastUpdated: string | null;
+}>;
+
+function getServerError(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const error = (payload as { error?: unknown }).error;
+  return typeof error === 'string' && error.trim() ? error : null;
+}
+
 export async function loadProcessedData(): Promise<ProcessedDataset> {
   const res = await fetch('/api/data', { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to load data from the server');
-  const data = await res.json();
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(getServerError(data) ?? 'Failed to load data from the server');
+  }
+  const payload: ApiDataPayload = data && typeof data === 'object' ? data : {};
 
   return {
-    sales: reviveDates<ProcessedSalesRecord>(data.sales, ['date']),
-    purchase: reviveDates<ProcessedPurchaseRecord>(data.purchase, ['date']),
-    returns: reviveDates<ProcessedSalesReturnRecord>(data.returns, ['date']),
-    purchaseReturns: reviveDates<ProcessedPurchaseReturnRecord>(data.purchaseReturns ?? [], ['date']),
-    stock: reviveDates<ProcessedStockRecord>(data.stock, ['snapshotDate']),
-    adjustments: reviveDates<ProcessedAdjustmentRecord>(data.adjustments ?? [], ['date']),
-    issues: data.issues as ValidationIssue[],
-    skuMaster: data.skuMaster as SkuMasterRecord[],
-    lastUpdated: data.lastUpdated ? new Date(data.lastUpdated) : null,
+    sales: reviveDates<ProcessedSalesRecord>(payload.sales ?? [], ['date']),
+    purchase: reviveDates<ProcessedPurchaseRecord>(payload.purchase ?? [], ['date']),
+    returns: reviveDates<ProcessedSalesReturnRecord>(payload.returns ?? [], ['date']),
+    purchaseReturns: reviveDates<ProcessedPurchaseReturnRecord>(payload.purchaseReturns ?? [], ['date']),
+    stock: reviveDates<ProcessedStockRecord>(payload.stock ?? [], ['snapshotDate']),
+    adjustments: reviveDates<ProcessedAdjustmentRecord>(payload.adjustments ?? [], ['date']),
+    issues: payload.issues ?? [],
+    skuMaster: payload.skuMaster ?? [],
+    lastUpdated: payload.lastUpdated ? new Date(payload.lastUpdated) : null,
   };
 }
