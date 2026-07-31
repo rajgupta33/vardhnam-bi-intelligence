@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { loadLastUpdated, loadSyncResult } from '@/lib/db/sqlite';
+import { loadLastUpdated, loadSyncResult } from '@/lib/db/store';
 import { getTallyCompanies } from '@/lib/tally/companies';
 
 /** Data older than this is treated as stale, so a failed sync cannot pass unnoticed. */
 const STALE_AFTER_MINUTES = Number(process.env.TALLY_STALE_AFTER_MINUTES || 60);
 
 export async function GET() {
-  const lastSync = loadSyncResult();
-  const lastUpdated = loadLastUpdated();
+  const [lastSync, lastUpdated] = await Promise.all([loadSyncResult(), loadLastUpdated()]);
 
   const ageMinutes = lastUpdated ? (Date.now() - lastUpdated.getTime()) / 60000 : null;
   const isStale = ageMinutes === null || ageMinutes > STALE_AFTER_MINUTES;

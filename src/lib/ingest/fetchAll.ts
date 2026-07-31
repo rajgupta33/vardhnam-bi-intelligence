@@ -15,7 +15,7 @@ import { detectDuplicateRows } from '../validation/duplicates';
 import { parseSkuMaster } from '../parsers/parseSkuMaster';
 import { parseSkuMapping } from '../parsers/parseSkuMapping';
 import { buildReconciliationReport } from '../reconciliation';
-import { saveProcessedData, saveSyncResult, countStoredRows, SyncResultRecord } from '../db/sqlite';
+import { saveProcessedData, saveSyncResult, countStoredRows, SyncResultRecord } from '../db/store';
 import { extractAllCompanies, CompanyExtract } from '../tally/sync';
 import { getTallyCompanies } from '../tally/companies';
 import { runLocalFileSync, LocalFileSyncResult } from '../localfiles/sync';
@@ -173,7 +173,7 @@ export async function runFullIngest(): Promise<FetchAllResult> {
       error: sources.map((s) => `${s.source}: ${s.error}`).join(' | '),
       sources,
     };
-    saveSyncResult(result);
+    await saveSyncResult(result);
     return result;
   }
 
@@ -184,7 +184,7 @@ export async function runFullIngest(): Promise<FetchAllResult> {
   // running but its company files not loaded, which is reported as success).
   // Whenever a good snapshot already exists, keep it and report the failure.
   const degraded = sources.filter((s) => !s.ok || sourceRowTotal(s.counts) === 0);
-  if (degraded.length > 0 && countStoredRows() > 0) {
+  if (degraded.length > 0 && (await countStoredRows()) > 0) {
     const detail = degraded
       .map(
         (s) =>
@@ -197,7 +197,7 @@ export async function runFullIngest(): Promise<FetchAllResult> {
       error: `Kept the existing data rather than overwriting it with a partial load. ${detail}`,
       sources,
     };
-    saveSyncResult(result);
+    await saveSyncResult(result);
     return result;
   }
 
@@ -257,7 +257,7 @@ export async function runFullIngest(): Promise<FetchAllResult> {
     companies: allLabels,
   });
 
-  saveProcessedData({
+  await saveProcessedData({
     sales,
     purchase,
     returns,
@@ -314,6 +314,6 @@ export async function runFullIngest(): Promise<FetchAllResult> {
     })),
   };
 
-  saveSyncResult(result);
+  await saveSyncResult(result);
   return result;
 }

@@ -20,7 +20,7 @@ import { ValidationEngine } from '../validation/engine';
 import { SkuMapper } from '../sku/mapper';
 import { detectPurchaseOverlap } from '../validation/advanced';
 import { detectDuplicateRows } from '../validation/duplicates';
-import { saveProcessedData, saveSyncResult, SyncResultRecord } from '../db/sqlite';
+import { saveProcessedData, saveSyncResult, SyncResultRecord } from '../db/store';
 import { buildReconciliationReport } from '../reconciliation';
 import {
   ProcessedSalesRecord,
@@ -242,7 +242,7 @@ export async function runTallySync(): Promise<TallySyncResult> {
       companies: Array.from(new Set(companies.map((c) => c.label))),
     });
 
-    saveProcessedData({
+    await saveProcessedData({
       sales,
       purchase,
       returns,
@@ -299,13 +299,13 @@ export async function runTallySync(): Promise<TallySyncResult> {
         variance: c.variance,
       })),
     };
-    saveSyncResult(result);
+    await saveSyncResult(result);
     return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error during Tally sync';
     console.error('[tally-sync] failed:', message);
     const result: TallySyncResult = { success: false, syncedAt, error: message };
-    saveSyncResult(result);
+    await saveSyncResult(result);
     return result;
   }
 }

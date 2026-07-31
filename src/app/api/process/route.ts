@@ -12,7 +12,7 @@ import { parseSkuMapping } from '@/lib/parsers/parseSkuMapping';
 import { ValidationEngine } from '@/lib/validation/engine';
 import { SkuMapper } from '@/lib/sku/mapper';
 import { detectPurchaseOverlap, validateSalesReturnSemantics, validateDealerCoverage } from '@/lib/validation/advanced';
-import { saveProcessedData } from '@/lib/db/sqlite';
+import { saveProcessedData } from '@/lib/db/store';
 
 export async function POST() {
   try {
